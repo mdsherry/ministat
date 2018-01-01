@@ -6,37 +6,45 @@ use t_table::T_CONFIDENCES;
 #[derive(StructOpt, Debug)]
 #[structopt(name="ministat", about = "A Rust port of the ministat utility")]
 pub struct Opt {
-    #[structopt(short="n")]
+    #[structopt(short="n", long="raw")]
     /// Just report the raw statistics of the input, suppress the ASCII-art plot
     /// and the relative comparisons.
     pub raw_stats: bool,
-    #[structopt(short="s")]
+
+    #[structopt(short="s", long="separate")]
     /// Print the average/median/stddev bars on separate lines in the ASCII-art
     /// plot, to avoid overlap.
     pub separate_lines: bool,
-    #[structopt(short="A")]
+    
+    #[structopt(short="A", long="stats-only")]
     /// Print statistics only. Suppress the graph.
     pub stats_only: bool,
-    #[structopt(short="m")]
+    
+    #[structopt(short="m", long="modern")]
     /// Use non-ASCII characters for drawing the graph
     pub modern_chars: bool,
-    #[structopt(short="C", default_value = "1")]
+    
+    #[structopt(short="C", long="column", default_value = "1")]
     /// Specify which column of data to use. By default the first column in the
     /// input file(s) are used.
     pub column: Column,
-    #[structopt(short="c", default_value = "95")]
+
+    #[structopt(short="c", long="confidence", default_value = "95")]
     /// Specify desired confidence level for Student's T analysis.  Possible
     /// values are 80, 90, 95, 98, 99 and 99.5%
     pub confidence_level: Confidence,
-    #[structopt(short="d", default_value = " \t")]
+    
+    #[structopt(short="d", long="delimit", default_value = " \t")]
     /// Specifies the column delimiter characters, default is SPACE and TAB.
     /// See strtok(3) for details.
     pub delimiter: String,
-    #[structopt(short="w")]
+    
+    #[structopt(short="w", long="width")]
     /// Width of ASCII-art plot in characters, default is terminal width, or 74.
     pub width: Option<u16>,
-    /// Files containing datapoints to compute statistics for
+    
     #[structopt(parse(from_os_str))]
+    /// Files containing datapoints to compute statistics for
     pub files: Vec<PathBuf>,
 }
 
