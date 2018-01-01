@@ -1,0 +1,12 @@
+[package]
+name = "ministat"
+version = "0.1.0"
+authors = ["Mark Sherry <mdsherry@gmail.com>"]
+
+[dependencies]
+structopt = "0.1.6"
+structopt-derive = "0.1.6"
+failure = "0.1.1"
+noisy_float = "0.1.4"
+terminal_size = "0.1.7"
+kahan = "0.1.0"
