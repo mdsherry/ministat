@@ -25,10 +25,9 @@ use structopt::StructOpt;
 use terminal_size::terminal_size;
 use failure::Error;
 
-static SYMBOLS: [char; 8] = [' ', 'x', '+', '*', '%', '#', '@', 'O'];
-
-fn print_heading(sets: &Vec<Dataset>) {
-    for (symbol, set) in SYMBOLS.iter().skip(1).zip(sets.iter()) {
+fn print_heading(sets: &Vec<Dataset>, modern_chars: bool) {
+    let symbols = if modern_chars { &plot::UNICODE_SYMBOLS } else { &plot::CLASSIC_SYMBOLS };
+    for (symbol, set) in symbols.iter().skip(1).zip(sets.iter()) {
         println!("{} {}", symbol, set.path.to_string_lossy());
     }
 }
@@ -50,7 +49,7 @@ fn run(opt: Opt) -> Result<(), Error> {
                 .into());
         }
     }
-    print_heading(&datasets);
+    print_heading(&datasets, opt.modern_chars);
     let stats: Vec<_> = datasets.iter()
         .map(|dataset| Stats::from_dataset(&dataset.data))
         .collect();
@@ -59,11 +58,12 @@ fn run(opt: Opt) -> Result<(), Error> {
         if !opt.stats_only {
             plot_graph(get_width(&opt),
                        opt.separate_lines,
+                       opt.modern_chars,
                        &stats,
                        &datasets.into_iter().map(|x| x.data).collect::<Vec<_>>());
         }
     }
-    print_stats(&stats, opt.confidence_level.0, opt.raw_stats);
+    print_stats(&stats, opt.confidence_level.0, opt.raw_stats, opt.modern_chars);
 
     Ok(())
 }

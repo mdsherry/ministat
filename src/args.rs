@@ -17,6 +17,9 @@ pub struct Opt {
     #[structopt(short="A")]
     /// Print statistics only. Suppress the graph.
     pub stats_only: bool,
+    #[structopt(short="m")]
+    /// Use non-ASCII characters for drawing the graph
+    pub modern_chars: bool,
     #[structopt(short="C", default_value = "1")]
     /// Specify which column of data to use. By default the first column in the
     /// input file(s) are used.

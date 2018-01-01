@@ -53,8 +53,9 @@ impl Stats {
     }
 }
 
-pub fn print_stats(stats: &Vec<Stats>, confidence_idx: usize, raw_stats: bool) {
-    use SYMBOLS;
+pub fn print_stats(stats: &Vec<Stats>, confidence_idx: usize, raw_stats: bool, modern_chars: bool) {
+    use plot::{UNICODE_SYMBOLS, CLASSIC_SYMBOLS};
+    let symbols = if modern_chars { &UNICODE_SYMBOLS } else { &CLASSIC_SYMBOLS };
     use t_table::{T_TABLE, T_CONFIDENCES};
 
     let confidence_label = T_CONFIDENCES[confidence_idx];
@@ -69,7 +70,7 @@ pub fn print_stats(stats: &Vec<Stats>, confidence_idx: usize, raw_stats: bool) {
     let mut first_stats = None;
     let fmt_decimal =
         |x| format!("{:13.6}", x).trim_right_matches('0').trim_right_matches('.').to_string();
-    for (&symbol, ref stats) in SYMBOLS.iter().skip(1).zip(stats.iter()) {
+    for (&symbol, ref stats) in symbols.iter().skip(1).zip(stats.iter()) {
         println!("{symbol} {N:>3} {Min:>13} {Max:>13} {Median:>13} {Avg:>13} \
                   {Stddev:>13}",
                  symbol = symbol,

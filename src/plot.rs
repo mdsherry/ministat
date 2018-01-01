@@ -2,9 +2,49 @@ use noisy_float::prelude::*;
 use std::borrow::Borrow;
 use std::iter;
 
-use SYMBOLS;
 use stats::Stats;
 use err::MinistatFailure;
+
+pub static CLASSIC_SYMBOLS: [char; 8] = [' ', 'x', '+', '*', '%', '#', '@', 'O'];
+pub static UNICODE_SYMBOLS: [char; 8] = [' ', '●', '○', '◾', '◽', '◆', '◇', '▲'];
+
+struct DrawingChars {
+    ul: char,
+    ur: char,
+    horiz: char,
+    vert: char,
+    ll: char,
+    lr: char,
+    bar_start: char,
+    bar_end: char,
+    bar: char,
+    symbols: &'static [char]
+}
+
+static CLASSIC_CHARS: DrawingChars = DrawingChars {
+    ul: '+',
+    ur: '+',
+    horiz: '-',
+    vert: '|',
+    ll: '+',
+    lr: '+',
+    bar_start: '|',
+    bar_end: '|',
+    bar: '_',
+    symbols: &CLASSIC_SYMBOLS
+};
+static MODERN_CHARS: DrawingChars = DrawingChars {
+    ul: '┌',
+    ur: '┐',
+    horiz: '─',
+    vert: '│',
+    ll: '└',
+    lr: '┘',
+    bar_start: '├',
+    bar_end: '┤',
+    bar: '─',
+    symbols: &UNICODE_SYMBOLS
+};
 
 pub struct Plot {
     width: u16,
@@ -35,7 +75,8 @@ impl Plot {
         })
     }
 
-    pub fn draw<T: Borrow<[f64]>>(&self, data: &[T], stats: &[Stats], separate_lines: bool) {
+    pub fn draw<T: Borrow<[f64]>>(&self, data: &[T], stats: &[Stats], separate_lines: bool, modern_chars: bool) {
+        let charset = if modern_chars { &MODERN_CHARS } else { &CLASSIC_CHARS };
         let col_count = (self.width - 2) as usize;
         let mut columns: Vec<Vec<usize>> = iter::repeat(Vec::new()).take(col_count).collect();
         let dx = (self.max - self.min) / ((col_count - 1) as f64);
@@ -66,27 +107,31 @@ impl Plot {
                 }
             }
         }
-        println!("+{}+", "-".repeat(col_count));
+
+        println!("{}{}{}", charset.ul, charset.horiz.to_string().repeat(col_count), charset.ur);
+        
         for row in (0..max_height).rev() {
             let mut row_text = String::new();
             for col in columns.iter() {
                 if col.len() > row {
-                    row_text.push(SYMBOLS[col[row]]);
+                    row_text.push(charset.symbols[col[row]]);
                 } else {
                     row_text.push(' ');
                 }
             }
-            println!("|{}|", row_text);
+            
+            println!("{}{}{}", charset.vert, row_text, charset.vert);
+            
         }
         let draw_on_bar = |bar: &mut Vec<char>, stat: &Stats| {
             let std_low = discretize(stat.mean - stat.stddev);
             let std_high = discretize(stat.mean + stat.stddev);
-            bar[std_low] = '|';
-            bar[std_high] = '|';
+            bar[std_low] = charset.bar_start;
+            bar[std_high] = charset.bar_end;
             for i in (std_low + 1)..std_high {
                 // Don't clobber other symbols
                 if bar[i] == ' ' {
-                    bar[i] = '_';
+                    bar[i] = charset.bar;
                 }
             }
             bar[discretize(stat.mean)] = 'A';
@@ -97,23 +142,24 @@ impl Plot {
             for stat in stats.iter() {
                 let mut bar = make_bar();
                 draw_on_bar(&mut bar, stat);
-                println!("|{}|", bar.into_iter().collect::<String>());
+                println!("{}{}{}", charset.vert, bar.into_iter().collect::<String>(), charset.vert);
             }
         } else {
             let mut bar = make_bar();
             for stat in stats.iter() {
                 draw_on_bar(&mut bar, stat);
             }
-            println!("|{}|", bar.into_iter().collect::<String>());
+            println!("{}{}{}", charset.vert, bar.into_iter().collect::<String>(), charset.vert);
         }
 
 
-        println!("+{}+", "-".repeat(col_count));
+        println!("{}{}{}", charset.ll, charset.horiz.to_string().repeat(col_count), charset.lr);
     }
 }
 
 pub fn plot_graph<T: Borrow<[f64]>>(width: u16,
                                     separate_lines: bool,
+                                    modern_chars: bool,
                                     stats: &Vec<Stats>,
                                     data: &[T]) {
     let plot = Plot::new(width, stats);
@@ -121,5 +167,5 @@ pub fn plot_graph<T: Borrow<[f64]>>(width: u16,
         return;
     }
     let plot = plot.unwrap();
-    plot.draw(data, &stats, separate_lines);
+    plot.draw(data, &stats, separate_lines, modern_chars);
 }
