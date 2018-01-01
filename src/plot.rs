@@ -4,6 +4,7 @@ use std::iter;
 
 use stats::Stats;
 use err::MinistatFailure;
+use args::Opt;
 
 pub static CLASSIC_SYMBOLS: [char; 8] = [' ', 'x', '+', '*', '%', '#', '@', 'O'];
 pub static UNICODE_SYMBOLS: [char; 8] = [' ', '●', '○', '◾', '◽', '◆', '◇', '▲'];
@@ -75,39 +76,42 @@ impl Plot {
         })
     }
 
-    pub fn draw<T: Borrow<[f64]>>(&self, data: &[T], stats: &[Stats], separate_lines: bool, modern_chars: bool) {
-        let charset = if modern_chars { &MODERN_CHARS } else { &CLASSIC_CHARS };
+    pub fn draw<T: Borrow<[f64]>>(&self, data: &[T], stats: &[Stats], opt: &Opt) {
+        let charset = if opt.modern_chars { &MODERN_CHARS } else { &CLASSIC_CHARS };
         let col_count = (self.width - 2) as usize;
         let mut columns: Vec<Vec<usize>> = iter::repeat(Vec::new()).take(col_count).collect();
         let dx = (self.max - self.min) / ((col_count - 1) as f64);
         let zero_point = self.min - 0.5 * dx;
         let discretize = |pt: f64| ((pt - zero_point) / dx) as usize;
-        let mut max_height = 0;
+        
         for (idx, dataset) in data.iter().enumerate() {
             let mut height = 0;
             let mut last_seen = None;
             for datum in dataset.borrow().iter() {
                 let x = discretize(*datum);
-                match last_seen {
-                    Some(last) if last == x => {
-                        height += 1;
-                    }
-                    _ => {
-                        if height > max_height {
-                            max_height = height;
-                        }
-                        height = 1;
-                        last_seen = Some(x);
-                    }
-                }
-                if columns[x].len() < height {
+                if opt.stack {
                     columns[x].push(idx + 1);
                 } else {
-                    columns[x][height - 1] |= idx + 1;
+                    match last_seen {
+                        Some(last) if last == x => {
+                            height += 1;
+                        }
+                        _ => {
+                            height = 1;
+                            last_seen = Some(x);
+                        }
+                    }
+                    if columns[x].len() < height {
+                        columns[x].push(idx + 1);
+                    } else {
+                        columns[x][height - 1] |= idx + 1;
+                    }
                 }
             }
         }
-
+        
+        let max_height = columns.iter().map(|c| c.len()).max().unwrap();
+        
         println!("{}{}{}", charset.ul, charset.horiz.to_string().repeat(col_count), charset.ur);
         
         for row in (0..max_height).rev() {
@@ -138,7 +142,7 @@ impl Plot {
             bar[discretize(stat.median)] = 'M';
         };
         let make_bar = || iter::repeat(' ').take(col_count).collect::<Vec<_>>();
-        if separate_lines {
+        if opt.separate_lines {
             for stat in stats.iter() {
                 let mut bar = make_bar();
                 draw_on_bar(&mut bar, stat);
@@ -158,8 +162,7 @@ impl Plot {
 }
 
 pub fn plot_graph<T: Borrow<[f64]>>(width: u16,
-                                    separate_lines: bool,
-                                    modern_chars: bool,
+                                    opt: &Opt,
                                     stats: &Vec<Stats>,
                                     data: &[T]) {
     let plot = Plot::new(width, stats);
@@ -167,5 +170,5 @@ pub fn plot_graph<T: Borrow<[f64]>>(width: u16,
         return;
     }
     let plot = plot.unwrap();
-    plot.draw(data, &stats, separate_lines, modern_chars);
+    plot.draw(data, &stats, opt);
 }

@@ -24,6 +24,10 @@ pub struct Opt {
     /// Use non-ASCII characters for drawing the graph
     pub modern_chars: bool,
     
+    #[structopt(short="t", long="stack")]
+    /// Stack datapoints in the graph instead of overlapping them
+    pub stack: bool,
+    
     #[structopt(short="C", long="column", default_value = "1")]
     /// Specify which column of data to use. By default the first column in the
     /// input file(s) are used.

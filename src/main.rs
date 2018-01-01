@@ -57,8 +57,7 @@ fn run(opt: Opt) -> Result<(), Error> {
     if !opt.raw_stats {
         if !opt.stats_only {
             plot_graph(get_width(&opt),
-                       opt.separate_lines,
-                       opt.modern_chars,
+                       &opt,
                        &stats,
                        &datasets.into_iter().map(|x| x.data).collect::<Vec<_>>());
         }

@@ -117,7 +117,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "ministat"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "failure 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "kahan 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
