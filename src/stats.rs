@@ -88,7 +88,7 @@ pub fn print_stats(stats: &Vec<Stats>, confidence_idx: usize, raw_stats: bool, m
                 // Because we the sample sizes and variances might differ, we
                 // use https://en.wikipedia.org/wiki/Welch%27s_t-test
                 // to compute a t value.
-                let t = (stats.mean - fs.mean) / val.sqrt();
+                let t = ((stats.mean - fs.mean) / val.sqrt()).abs();
                 let a = stats.var.powi(2) / (stats.n * stats.n * (stats.n - 1)) as f64;
                 let b = fs.var.powi(2) / (fs.n * fs.n * (fs.n - 1)) as f64;
                 let v = val.powi(2) / (a + b);
