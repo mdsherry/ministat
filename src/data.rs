@@ -25,8 +25,7 @@ impl Dataset {
         for (i, line) in r.lines().enumerate() {
             let line = line?;
             let val = line.split(|x| split_chars.contains(&x))
-                .skip((col - 1) as usize)
-                .next();
+                .nth((col - 1) as usize);
             if let Some(val) = val {
                 let parsed = val.parse::<f64>()
                     .map_err(|_| {
@@ -60,7 +59,7 @@ pub fn load_data(opt: &Opt) -> Result<Vec<Dataset>, Error> {
         let name = "stdin";
         datas.push(Dataset::from_reader(reader, name, opt.column.0, &split_chars)?);
     } else {
-        for fname in opt.files.iter() {
+        for fname in &opt.files {
             let f = File::open(fname)?;
             let reader = BufReader::new(f);
             datas.push(Dataset::from_reader(reader, fname, opt.column.0, &split_chars)?);

@@ -71,6 +71,6 @@ impl FromStr for Confidence {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         T_CONFIDENCES.iter().position(|c| c == &s).ok_or_else(|| {
             MinistatFailure::InvalidConfidence { provided_confidence: s.to_string() }
-        }).map(|p| Confidence(p))
+        }).map(Confidence)
     }
 }

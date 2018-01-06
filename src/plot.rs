@@ -1,3 +1,5 @@
+#![cfg_attr(feature="cargo-clippy", allow(blacklisted_name))]
+
 use noisy_float::prelude::*;
 use std::borrow::Borrow;
 use std::iter;
@@ -52,7 +54,6 @@ pub struct Plot {
     max: f64,
     min: f64,
 }
-
 
 impl Plot {
     pub fn new(width: u16, stats: &[Stats]) -> Result<Self, MinistatFailure> {
@@ -116,7 +117,7 @@ impl Plot {
         
         for row in (0..max_height).rev() {
             let mut row_text = String::new();
-            for col in columns.iter() {
+            for col in &columns {
                 if col.len() > row {
                     row_text.push(charset.symbols[col[row]]);
                 } else {
@@ -132,10 +133,9 @@ impl Plot {
             let std_high = discretize(stat.mean + stat.stddev);
             bar[std_low] = charset.bar_start;
             bar[std_high] = charset.bar_end;
-            for i in (std_low + 1)..std_high {
-                // Don't clobber other symbols
-                if bar[i] == ' ' {
-                    bar[i] = charset.bar;
+            for bar_segment in bar.iter_mut().take(std_high).skip(std_low + 1) {
+                if *bar_segment == ' ' {
+                    *bar_segment = charset.bar;
                 }
             }
             bar[discretize(stat.mean)] = 'A';
@@ -163,12 +163,12 @@ impl Plot {
 
 pub fn plot_graph<T: Borrow<[f64]>>(width: u16,
                                     opt: &Opt,
-                                    stats: &Vec<Stats>,
+                                    stats: &[Stats],
                                     data: &[T]) {
     let plot = Plot::new(width, stats);
     if plot.is_err() {
         return;
     }
     let plot = plot.unwrap();
-    plot.draw(data, &stats, opt);
+    plot.draw(data, stats, opt);
 }
