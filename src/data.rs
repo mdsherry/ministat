@@ -1,14 +1,14 @@
-use std::io::prelude::*;
-use std::io::{BufReader, BufRead};
-use std::fs::File;
-use std::path::{PathBuf, Path};
 use std::collections::HashSet;
+use std::fs::File;
+use std::io::prelude::*;
+use std::io::{BufRead, BufReader};
+use std::path::{Path, PathBuf};
 
-use noisy_float::prelude::*;
 use anyhow::Error;
+use noisy_float::prelude::*;
 
-use crate::err::MinistatFailure;
 use crate::args::Opt;
+use crate::err::MinistatFailure;
 
 pub struct Dataset {
     pub path: PathBuf,
@@ -16,28 +16,28 @@ pub struct Dataset {
 }
 
 impl Dataset {
-    pub fn from_reader<R: Read, P: AsRef<Path>>(r: BufReader<R>,
-                                                name: P,
-                                                col: u8,
-                                                split_chars: &HashSet<char>)
-                                                -> Result<Self, Error> {
+    pub fn from_reader<R: Read, P: AsRef<Path>>(
+        r: BufReader<R>,
+        name: P,
+        col: u8,
+        split_chars: &HashSet<char>,
+    ) -> Result<Self, Error> {
         let mut rv = Vec::new();
         for (i, line) in r.lines().enumerate() {
             let line = line?;
-            let val = line.split(|x| split_chars.contains(&x))
+            let val = line
+                .split(|x| split_chars.contains(&x))
                 .nth((col - 1) as usize);
             if let Some(val) = val {
-                let parsed = val.parse::<f64>()
-                    .map_err(|_| {
-                        MinistatFailure::InvalidData {
-                            file: name.as_ref().to_string_lossy().into_owned(),
-                            line_no: i + 1,
-                        }
+                let parsed = val
+                    .parse::<f64>()
+                    .map_err(|_| MinistatFailure::InvalidData {
+                        file: name.as_ref().to_string_lossy().into_owned(),
+                        line_no: i + 1,
                     })?;
                 if parsed.is_finite() {
                     rv.push(r64(parsed));
                 }
-
             }
         }
         rv.sort();
@@ -56,12 +56,22 @@ pub fn load_data(opt: &Opt) -> Result<Vec<Dataset>, Error> {
     if opt.files.is_empty() {
         let reader = BufReader::new(io::stdin());
         let name = "stdin";
-        datas.push(Dataset::from_reader(reader, name, opt.column.0, &split_chars)?);
+        datas.push(Dataset::from_reader(
+            reader,
+            name,
+            opt.column.0,
+            &split_chars,
+        )?);
     } else {
         for fname in &opt.files {
             let f = File::open(fname)?;
             let reader = BufReader::new(f);
-            datas.push(Dataset::from_reader(reader, fname, opt.column.0, &split_chars)?);
+            datas.push(Dataset::from_reader(
+                reader,
+                fname,
+                opt.column.0,
+                &split_chars,
+            )?);
         }
     }
     Ok(datas)

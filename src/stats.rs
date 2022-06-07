@@ -54,34 +54,46 @@ impl Stats {
 }
 
 pub fn print_stats(stats: &[Stats], confidence_idx: usize, raw_stats: bool, modern_chars: bool) {
-    use crate::plot::{UNICODE_SYMBOLS, CLASSIC_SYMBOLS};
-    let symbols = if modern_chars { &UNICODE_SYMBOLS } else { &CLASSIC_SYMBOLS };
-    use crate::t_table::{T_TABLE, T_CONFIDENCES};
+    use crate::plot::{CLASSIC_SYMBOLS, UNICODE_SYMBOLS};
+    let symbols = if modern_chars {
+        &UNICODE_SYMBOLS
+    } else {
+        &CLASSIC_SYMBOLS
+    };
+    use crate::t_table::{T_CONFIDENCES, T_TABLE};
 
     let confidence_label = T_CONFIDENCES[confidence_idx];
     // This isn't necessary, but helps maintain symmetry between the header and data rows
     let symbol = ' ';
-    println!("{symbol} {N:>3} {Min:>13} {Max:>13} {Median:>13} {Avg:>13} {Stddev:>13}",
-             symbol = symbol,
-             N = "N",
-             Min = "Min",
-             Max = "Max",
-             Median = "Median",
-             Avg = "Avg",
-             Stddev = "Stddev");
+    println!(
+        "{symbol} {N:>3} {Min:>13} {Max:>13} {Median:>13} {Avg:>13} {Stddev:>13}",
+        symbol = symbol,
+        N = "N",
+        Min = "Min",
+        Max = "Max",
+        Median = "Median",
+        Avg = "Avg",
+        Stddev = "Stddev"
+    );
     let mut first_stats = None;
-    let fmt_decimal =
-        |x| format!("{:13.6}", x).trim_start_matches('0').trim_start_matches('.').to_string();
+    let fmt_decimal = |x| {
+        format!("{:13.6}", x)
+            .trim_start_matches('0')
+            .trim_start_matches('.')
+            .to_string()
+    };
     for (&symbol, stats) in symbols.iter().skip(1).zip(stats.iter()) {
-        println!("{symbol} {N:>3} {Min:>13} {Max:>13} {Median:>13} {Avg:>13} \
+        println!(
+            "{symbol} {N:>3} {Min:>13} {Max:>13} {Median:>13} {Avg:>13} \
                   {Stddev:>13}",
-                 symbol = symbol,
-                 N = stats.n,
-                 Min = fmt_decimal(stats.min),
-                 Max = fmt_decimal(stats.max),
-                 Median = fmt_decimal(stats.median),
-                 Avg = fmt_decimal(stats.mean),
-                 Stddev = fmt_decimal(stats.stddev));
+            symbol = symbol,
+            N = stats.n,
+            Min = fmt_decimal(stats.min),
+            Max = fmt_decimal(stats.max),
+            Median = fmt_decimal(stats.median),
+            Avg = fmt_decimal(stats.mean),
+            Stddev = fmt_decimal(stats.stddev)
+        );
         if !raw_stats && first_stats.is_none() {
             first_stats = Some(stats.clone());
         } else if let Some(ref fs) = first_stats {
@@ -103,9 +115,11 @@ pub fn print_stats(stats: &[Stats], confidence_idx: usize, raw_stats: bool, mode
             if t > t_required {
                 println!("Difference at {}% confidence", confidence_label);
                 println!("\t{:.6} +/- {:.6}", stats.mean - fs.mean, t_required * val);
-                println!("\t{:.6}% +/- {:.6}%",
-                            (stats.mean - fs.mean) / fs.mean * 100.,
-                            t_required * val * 100. / fs.mean);
+                println!(
+                    "\t{:.6}% +/- {:.6}%",
+                    (stats.mean - fs.mean) / fs.mean * 100.,
+                    t_required * val * 100. / fs.mean
+                );
                 println!("\t(Welch's t = {:.6})", t);
             } else {
                 println!("No difference proven at {}% confidence", confidence_label);

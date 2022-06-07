@@ -2,9 +2,9 @@ use noisy_float::prelude::*;
 use std::borrow::Borrow;
 use std::iter;
 
-use crate::stats::Stats;
-use crate::err::MinistatFailure;
 use crate::args::Opt;
+use crate::err::MinistatFailure;
+use crate::stats::Stats;
 
 pub static CLASSIC_SYMBOLS: [char; 8] = [' ', 'x', '+', '*', '%', '#', '@', 'O'];
 pub static UNICODE_SYMBOLS: [char; 8] = [' ', '●', '○', '◾', '◽', '◆', '◇', '▲'];
@@ -19,7 +19,7 @@ struct DrawingChars {
     bar_start: char,
     bar_end: char,
     bar: char,
-    symbols: &'static [char]
+    symbols: &'static [char],
 }
 
 static CLASSIC_CHARS: DrawingChars = DrawingChars {
@@ -32,7 +32,7 @@ static CLASSIC_CHARS: DrawingChars = DrawingChars {
     bar_start: '|',
     bar_end: '|',
     bar: '_',
-    symbols: &CLASSIC_SYMBOLS
+    symbols: &CLASSIC_SYMBOLS,
 };
 static MODERN_CHARS: DrawingChars = DrawingChars {
     ul: '┌',
@@ -44,7 +44,7 @@ static MODERN_CHARS: DrawingChars = DrawingChars {
     bar_start: '├',
     bar_end: '┤',
     bar: '─',
-    symbols: &UNICODE_SYMBOLS
+    symbols: &UNICODE_SYMBOLS,
 };
 
 pub struct Plot {
@@ -55,34 +55,36 @@ pub struct Plot {
 
 impl Plot {
     pub fn new(width: u16, stats: &[Stats]) -> Result<Self, MinistatFailure> {
-        let max = stats.iter()
+        let max = stats
+            .iter()
             .map(|stat| r64(stat.max))
             .chain(stats.iter().map(|stat| r64(stat.mean + stat.stddev)))
             .max()
             .ok_or(MinistatFailure::NoPlotPossible)?
             .raw();
 
-        let min = stats.iter()
+        let min = stats
+            .iter()
             .map(|stat| r64(stat.min))
             .chain(stats.iter().map(|stat| r64(stat.mean - stat.stddev)))
             .min()
             .ok_or(MinistatFailure::NoPlotPossible)?
             .raw();
-        Ok(Plot {
-            width,
-            min,
-            max,
-        })
+        Ok(Plot { width, min, max })
     }
 
     pub fn draw<T: Borrow<[f64]>>(&self, data: &[T], stats: &[Stats], opt: &Opt) {
-        let charset = if opt.modern_chars { &MODERN_CHARS } else { &CLASSIC_CHARS };
+        let charset = if opt.modern_chars {
+            &MODERN_CHARS
+        } else {
+            &CLASSIC_CHARS
+        };
         let col_count = (self.width - 2) as usize;
         let mut columns: Vec<Vec<usize>> = iter::repeat(Vec::new()).take(col_count).collect();
         let dx = (self.max - self.min) / ((col_count - 1) as f64);
         let zero_point = self.min - 0.5 * dx;
         let discretize = |pt: f64| ((pt - zero_point) / dx) as usize;
-        
+
         for (idx, dataset) in data.iter().enumerate() {
             let mut height = 0;
             let mut last_seen = None;
@@ -108,11 +110,16 @@ impl Plot {
                 }
             }
         }
-        
+
         let max_height = columns.iter().map(|c| c.len()).max().unwrap();
-        
-        println!("{}{}{}", charset.ul, charset.horiz.to_string().repeat(col_count), charset.ur);
-        
+
+        println!(
+            "{}{}{}",
+            charset.ul,
+            charset.horiz.to_string().repeat(col_count),
+            charset.ur
+        );
+
         for row in (0..max_height).rev() {
             let mut row_text = String::new();
             for col in &columns {
@@ -122,9 +129,8 @@ impl Plot {
                     row_text.push(' ');
                 }
             }
-            
+
             println!("{}{}{}", charset.vert, row_text, charset.vert);
-            
         }
         let draw_on_bar = |bar: &mut Vec<char>, stat: &Stats| {
             let std_low = discretize(stat.mean - stat.stddev);
@@ -144,25 +150,36 @@ impl Plot {
             for stat in stats.iter() {
                 let mut bar = make_bar();
                 draw_on_bar(&mut bar, stat);
-                println!("{}{}{}", charset.vert, bar.into_iter().collect::<String>(), charset.vert);
+                println!(
+                    "{}{}{}",
+                    charset.vert,
+                    bar.into_iter().collect::<String>(),
+                    charset.vert
+                );
             }
         } else {
             let mut bar = make_bar();
             for stat in stats.iter() {
                 draw_on_bar(&mut bar, stat);
             }
-            println!("{}{}{}", charset.vert, bar.into_iter().collect::<String>(), charset.vert);
+            println!(
+                "{}{}{}",
+                charset.vert,
+                bar.into_iter().collect::<String>(),
+                charset.vert
+            );
         }
 
-
-        println!("{}{}{}", charset.ll, charset.horiz.to_string().repeat(col_count), charset.lr);
+        println!(
+            "{}{}{}",
+            charset.ll,
+            charset.horiz.to_string().repeat(col_count),
+            charset.lr
+        );
     }
 }
 
-pub fn plot_graph<T: Borrow<[f64]>>(width: u16,
-                                    opt: &Opt,
-                                    stats: &[Stats],
-                                    data: &[T]) {
+pub fn plot_graph<T: Borrow<[f64]>>(width: u16, opt: &Opt, stats: &[Stats], data: &[T]) {
     let plot = Plot::new(width, stats);
     if plot.is_err() {
         return;

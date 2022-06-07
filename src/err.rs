@@ -6,7 +6,10 @@ pub enum MinistatFailure {
     InvalidData { line_no: usize, file: String },
     #[error("'{}' is not a valid column (must be at least 1)", provided_column)]
     InvalidColumn { provided_column: String },
-    #[error("'{}' is not a valid confidence (must be one of 80, 90, 95, 98, 99 and 99.5)", provided_confidence)]
+    #[error(
+        "'{}' is not a valid confidence (must be one of 80, 90, 95, 98, 99 and 99.5)",
+        provided_confidence
+    )]
     InvalidConfidence { provided_confidence: String },
     #[error("Dataset {} must contain at least 3 datapoints. (Perhaps there was not enough data in the column you selected?)", file)]
     InsufficientData { file: String },
