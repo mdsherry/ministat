@@ -1,12 +1,13 @@
 [package]
 name = "ministat"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Mark Sherry <mdsherry@gmail.com>"]
+edition = "2021"
 
 [dependencies]
-structopt = "0.1.6"
-structopt-derive = "0.1.6"
-failure = "0.1.1"
-noisy_float = "0.1.4"
+anyhow = "1.0"
+thiserror = "1.0"
+noisy_float = "0.2"
 terminal_size = "0.1.7"
 kahan = "0.1.0"
+clap = { version = "3.1.18", features = ["derive"] }

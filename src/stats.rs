@@ -42,25 +42,27 @@ impl Stats {
             (data[data.len() / 2] + data[data.len() / 2 - 1]) / 2.
         };
         Stats {
-            max: max,
-            min: min,
-            stddev: stddev,
-            median: median,
-            mean: mean,
-            var: var,
+            max,
+            min,
+            stddev,
+            median,
+            mean,
+            var,
             n: data.len(),
         }
     }
 }
 
 pub fn print_stats(stats: &[Stats], confidence_idx: usize, raw_stats: bool, modern_chars: bool) {
-    use plot::{UNICODE_SYMBOLS, CLASSIC_SYMBOLS};
+    use crate::plot::{UNICODE_SYMBOLS, CLASSIC_SYMBOLS};
     let symbols = if modern_chars { &UNICODE_SYMBOLS } else { &CLASSIC_SYMBOLS };
-    use t_table::{T_TABLE, T_CONFIDENCES};
+    use crate::t_table::{T_TABLE, T_CONFIDENCES};
 
     let confidence_label = T_CONFIDENCES[confidence_idx];
+    // This isn't necessary, but helps maintain symmetry between the header and data rows
+    let symbol = ' ';
     println!("{symbol} {N:>3} {Min:>13} {Max:>13} {Median:>13} {Avg:>13} {Stddev:>13}",
-             symbol = ' ',
+             symbol = symbol,
              N = "N",
              Min = "Min",
              Max = "Max",
@@ -69,7 +71,7 @@ pub fn print_stats(stats: &[Stats], confidence_idx: usize, raw_stats: bool, mode
              Stddev = "Stddev");
     let mut first_stats = None;
     let fmt_decimal =
-        |x| format!("{:13.6}", x).trim_right_matches('0').trim_right_matches('.').to_string();
+        |x| format!("{:13.6}", x).trim_start_matches('0').trim_start_matches('.').to_string();
     for (&symbol, stats) in symbols.iter().skip(1).zip(stats.iter()) {
         println!("{symbol} {N:>3} {Min:>13} {Max:>13} {Median:>13} {Avg:>13} \
                   {Stddev:>13}",

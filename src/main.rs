@@ -1,12 +1,3 @@
-extern crate structopt;
-#[macro_use]
-extern crate structopt_derive;
-#[macro_use]
-extern crate failure;
-extern crate noisy_float;
-extern crate terminal_size;
-extern crate kahan;
-
 mod args;
 mod err;
 mod t_table;
@@ -20,10 +11,10 @@ use stats::*;
 use plot::plot_graph;
 use data::{Dataset, load_data};
 
-use structopt::StructOpt;
+use clap::Parser;
 
 use terminal_size::terminal_size;
-use failure::Error;
+use anyhow::Error;
 
 fn print_heading(sets: &[Dataset], modern_chars: bool) {
     let symbols = if modern_chars { &plot::UNICODE_SYMBOLS } else { &plot::CLASSIC_SYMBOLS };
@@ -65,11 +56,9 @@ fn run(opt: &Opt) -> Result<(), Error> {
     Ok(())
 }
 
-fn main() {
-    let opt = Opt::from_args();
+fn main() -> Result<(), Error> {
+    let opt = Opt::parse();
 
-    match run(&opt) {
-        Ok(()) => (),
-        Err(error) => eprintln!("{}, {}", error.cause(), error.backtrace()),
-    }
+    run(&opt)?;
+    Ok(())
 }

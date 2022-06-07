@@ -5,10 +5,10 @@ use std::path::{PathBuf, Path};
 use std::collections::HashSet;
 
 use noisy_float::prelude::*;
-use failure::Error;
+use anyhow::Error;
 
-use err::MinistatFailure;
-use args::Opt;
+use crate::err::MinistatFailure;
+use crate::args::Opt;
 
 pub struct Dataset {
     pub path: PathBuf,
@@ -50,7 +50,6 @@ impl Dataset {
 }
 
 pub fn load_data(opt: &Opt) -> Result<Vec<Dataset>, Error> {
-    use std::io::BufReader;
     use std::io;
     let mut datas: Vec<Dataset> = Vec::new();
     let split_chars: HashSet<char> = opt.delimiter.chars().collect();

@@ -1,6 +1,6 @@
 // Two-sided quantiles: 80%, 90%, 95%, 98%, 99% and 99.5%
 pub static T_CONFIDENCES: [&str; 6] = ["80", "90", "95", "98", "99", "99.5"];
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 pub static T_TABLE: [[f64; 6]; 1001] = [
 [  3.07768,   6.31375,  12.70620,  31.82052,  63.65674, 127.32134],
 [ 1.88562,  2.91999,  4.30265,  6.96456,  9.92484, 14.08905],

@@ -1,12 +1,10 @@
-#![cfg_attr(feature="cargo-clippy", allow(blacklisted_name))]
-
 use noisy_float::prelude::*;
 use std::borrow::Borrow;
 use std::iter;
 
-use stats::Stats;
-use err::MinistatFailure;
-use args::Opt;
+use crate::stats::Stats;
+use crate::err::MinistatFailure;
+use crate::args::Opt;
 
 pub static CLASSIC_SYMBOLS: [char; 8] = [' ', 'x', '+', '*', '%', '#', '@', 'O'];
 pub static UNICODE_SYMBOLS: [char; 8] = [' ', '●', '○', '◾', '◽', '◆', '◇', '▲'];
@@ -71,9 +69,9 @@ impl Plot {
             .ok_or(MinistatFailure::NoPlotPossible)?
             .raw();
         Ok(Plot {
-            width: width,
-            min: min,
-            max: max,
+            width,
+            min,
+            max,
         })
     }
 
