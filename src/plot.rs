@@ -33,7 +33,7 @@ static CLASSIC_CHARS: DrawingChars = DrawingChars {
     lr: '+',
     bar_start: '|',
     bar_end: '|',
-    bar: '_'
+    bar: '_',
 };
 static MODERN_CHARS: DrawingChars = DrawingChars {
     ul: '┌',
@@ -44,7 +44,7 @@ static MODERN_CHARS: DrawingChars = DrawingChars {
     lr: '┘',
     bar_start: '├',
     bar_end: '┤',
-    bar: '─'
+    bar: '─',
 };
 
 pub struct Plot {
@@ -73,11 +73,18 @@ impl Plot {
         Ok(Plot { width, min, max })
     }
 
-    pub fn draw<W, T>(&self, f: &mut W, data: &[T], stats: &[Stats], symbols: &[char], opt: &Opt) -> Result<(), Error> 
+    pub fn draw<W, T>(
+        &self,
+        f: &mut W,
+        data: &[T],
+        stats: &[Stats],
+        symbols: &[char],
+        opt: &Opt,
+    ) -> Result<(), Error>
     where
         W: Write,
-        T: Borrow<[f64]>
-     {
+        T: Borrow<[f64]>,
+    {
         let drawing_chars = if opt.modern_chars {
             &MODERN_CHARS
         } else {
@@ -117,7 +124,8 @@ impl Plot {
 
         let max_height = columns.iter().map(|c| c.len()).max().unwrap();
 
-        writeln!(f,
+        writeln!(
+            f,
             "{}{}{}",
             drawing_chars.ul,
             drawing_chars.horiz.to_string().repeat(col_count),
@@ -134,7 +142,11 @@ impl Plot {
                 }
             }
 
-            writeln!(f, "{}{}{}", drawing_chars.vert, row_text, drawing_chars.vert)?;
+            writeln!(
+                f,
+                "{}{}{}",
+                drawing_chars.vert, row_text, drawing_chars.vert
+            )?;
         }
         let draw_on_bar = |bar: &mut Vec<char>, stat: &Stats| {
             let std_low = discretize(stat.mean - stat.stddev);
@@ -154,7 +166,8 @@ impl Plot {
             for stat in stats.iter() {
                 let mut bar = make_bar();
                 draw_on_bar(&mut bar, stat);
-                writeln!(f,
+                writeln!(
+                    f,
                     "{}{}{}",
                     drawing_chars.vert,
                     bar.into_iter().collect::<String>(),
@@ -166,7 +179,8 @@ impl Plot {
             for stat in stats.iter() {
                 draw_on_bar(&mut bar, stat);
             }
-            writeln!(f,
+            writeln!(
+                f,
                 "{}{}{}",
                 drawing_chars.vert,
                 bar.into_iter().collect::<String>(),
@@ -174,7 +188,8 @@ impl Plot {
             )?;
         }
 
-        writeln!(f,
+        writeln!(
+            f,
             "{}{}{}",
             drawing_chars.ll,
             drawing_chars.horiz.to_string().repeat(col_count),
@@ -184,58 +199,123 @@ impl Plot {
     }
 }
 
-pub fn plot_graph<W, T>(f: &mut W, width: u16, opt: &Opt, stats: &[Stats], data: &[T], char_set: &[char]) -> Result<(), Error>
-where W: Write, T: Borrow<[f64]> {
+pub fn plot_graph<W, T>(
+    f: &mut W,
+    width: u16,
+    opt: &Opt,
+    stats: &[Stats],
+    data: &[T],
+    char_set: &[char],
+) -> Result<(), Error>
+where
+    W: Write,
+    T: Borrow<[f64]>,
+{
     let plot = Plot::new(width, stats)?;
     plot.draw(f, data, stats, char_set, opt)?;
     Ok(())
 }
 
-
-pub fn print_heading<W>(f: &mut W, sets: &[Dataset], symbols: &[char]) -> Result<(), Error> where W: Write {
+pub fn print_heading<W>(f: &mut W, sets: &[Dataset], symbols: &[char]) -> Result<(), Error>
+where
+    W: Write,
+{
     for (symbol, set) in symbols.iter().skip(1).zip(sets.iter()) {
         writeln!(f, "{} {}", symbol, set.path.to_string_lossy())?;
     }
     Ok(())
 }
 
-
 #[cfg(test)]
 mod test {
     use std::{path::PathBuf, str::FromStr};
 
-    use crate::{print_heading, data::Dataset, stats::Stats, args::Opt, plot::{CLASSIC_SYMBOLS, UNICODE_SYMBOLS}};
     use super::Plot;
+    use crate::{
+        args::Opt,
+        data::Dataset,
+        plot::{CLASSIC_SYMBOLS, UNICODE_SYMBOLS},
+        print_heading,
+        stats::Stats,
+    };
 
     #[test]
     fn test_print_heading_classic() {
         let mut buf = Vec::new();
         let datasets = vec![
-            Dataset { path: PathBuf::from_str("file1").unwrap(), data: vec![1.0, 2.0, 3.0, 4.0] },
-            Dataset { path: PathBuf::from_str("file2").unwrap(), data: vec![1.0, 2.0, 3.0, 4.0] },
-            Dataset { path: PathBuf::from_str("file3").unwrap(), data: vec![1.0, 2.0, 3.0, 4.0] },
-            Dataset { path: PathBuf::from_str("file4").unwrap(), data: vec![1.0, 2.0, 3.0, 4.0] },
-            Dataset { path: PathBuf::from_str("file5").unwrap(), data: vec![1.0, 2.0, 3.0, 4.0] },
-            Dataset { path: PathBuf::from_str("file6").unwrap(), data: vec![1.0, 2.0, 3.0, 4.0] },
-            Dataset { path: PathBuf::from_str("file7").unwrap(), data: vec![1.0, 2.0, 3.0, 4.0] },
+            Dataset {
+                path: PathBuf::from_str("file1").unwrap(),
+                data: vec![1.0, 2.0, 3.0, 4.0],
+            },
+            Dataset {
+                path: PathBuf::from_str("file2").unwrap(),
+                data: vec![1.0, 2.0, 3.0, 4.0],
+            },
+            Dataset {
+                path: PathBuf::from_str("file3").unwrap(),
+                data: vec![1.0, 2.0, 3.0, 4.0],
+            },
+            Dataset {
+                path: PathBuf::from_str("file4").unwrap(),
+                data: vec![1.0, 2.0, 3.0, 4.0],
+            },
+            Dataset {
+                path: PathBuf::from_str("file5").unwrap(),
+                data: vec![1.0, 2.0, 3.0, 4.0],
+            },
+            Dataset {
+                path: PathBuf::from_str("file6").unwrap(),
+                data: vec![1.0, 2.0, 3.0, 4.0],
+            },
+            Dataset {
+                path: PathBuf::from_str("file7").unwrap(),
+                data: vec![1.0, 2.0, 3.0, 4.0],
+            },
         ];
         print_heading(&mut buf, &datasets, &CLASSIC_SYMBOLS).unwrap();
-        assert_eq!("x file1\n+ file2\n* file3\n% file4\n# file5\n@ file6\nO file7\n", std::str::from_utf8(&buf).unwrap());
+        assert_eq!(
+            "x file1\n+ file2\n* file3\n% file4\n# file5\n@ file6\nO file7\n",
+            std::str::from_utf8(&buf).unwrap()
+        );
     }
     #[test]
     fn test_print_heading_modern() {
         let mut buf = Vec::new();
         let datasets = vec![
-            Dataset { path: PathBuf::from_str("file1").unwrap(), data: vec![1.0, 2.0, 3.0, 4.0] },
-            Dataset { path: PathBuf::from_str("file2").unwrap(), data: vec![1.0, 2.0, 3.0, 4.0] },
-            Dataset { path: PathBuf::from_str("file3").unwrap(), data: vec![1.0, 2.0, 3.0, 4.0] },
-            Dataset { path: PathBuf::from_str("file4").unwrap(), data: vec![1.0, 2.0, 3.0, 4.0] },
-            Dataset { path: PathBuf::from_str("file5").unwrap(), data: vec![1.0, 2.0, 3.0, 4.0] },
-            Dataset { path: PathBuf::from_str("file6").unwrap(), data: vec![1.0, 2.0, 3.0, 4.0] },
-            Dataset { path: PathBuf::from_str("file7").unwrap(), data: vec![1.0, 2.0, 3.0, 4.0] },
+            Dataset {
+                path: PathBuf::from_str("file1").unwrap(),
+                data: vec![1.0, 2.0, 3.0, 4.0],
+            },
+            Dataset {
+                path: PathBuf::from_str("file2").unwrap(),
+                data: vec![1.0, 2.0, 3.0, 4.0],
+            },
+            Dataset {
+                path: PathBuf::from_str("file3").unwrap(),
+                data: vec![1.0, 2.0, 3.0, 4.0],
+            },
+            Dataset {
+                path: PathBuf::from_str("file4").unwrap(),
+                data: vec![1.0, 2.0, 3.0, 4.0],
+            },
+            Dataset {
+                path: PathBuf::from_str("file5").unwrap(),
+                data: vec![1.0, 2.0, 3.0, 4.0],
+            },
+            Dataset {
+                path: PathBuf::from_str("file6").unwrap(),
+                data: vec![1.0, 2.0, 3.0, 4.0],
+            },
+            Dataset {
+                path: PathBuf::from_str("file7").unwrap(),
+                data: vec![1.0, 2.0, 3.0, 4.0],
+            },
         ];
         print_heading(&mut buf, &datasets, &UNICODE_SYMBOLS).unwrap();
-        assert_eq!("● file1\n○ file2\n◾ file3\n◽ file4\n◆ file5\n◇ file6\n▲ file7\n", std::str::from_utf8(&buf).unwrap());
+        assert_eq!(
+            "● file1\n○ file2\n◾ file3\n◽ file4\n◆ file5\n◇ file6\n▲ file7\n",
+            std::str::from_utf8(&buf).unwrap()
+        );
     }
 
     #[test]
@@ -244,25 +324,51 @@ mod test {
     fn test_print_heading_too_many() {
         let mut buf = Vec::new();
         let datasets = vec![
-            Dataset { path: PathBuf::from_str("file1").unwrap(), data: vec![1.0, 2.0, 3.0, 4.0] },
-            Dataset { path: PathBuf::from_str("file2").unwrap(), data: vec![1.0, 2.0, 3.0, 4.0] },
-            Dataset { path: PathBuf::from_str("file3").unwrap(), data: vec![1.0, 2.0, 3.0, 4.0] },
-            Dataset { path: PathBuf::from_str("file4").unwrap(), data: vec![1.0, 2.0, 3.0, 4.0] },
-            Dataset { path: PathBuf::from_str("file5").unwrap(), data: vec![1.0, 2.0, 3.0, 4.0] },
-            Dataset { path: PathBuf::from_str("file6").unwrap(), data: vec![1.0, 2.0, 3.0, 4.0] },
-            Dataset { path: PathBuf::from_str("file7").unwrap(), data: vec![1.0, 2.0, 3.0, 4.0] },
-            Dataset { path: PathBuf::from_str("file8").unwrap(), data: vec![1.0, 2.0, 3.0, 4.0] },
+            Dataset {
+                path: PathBuf::from_str("file1").unwrap(),
+                data: vec![1.0, 2.0, 3.0, 4.0],
+            },
+            Dataset {
+                path: PathBuf::from_str("file2").unwrap(),
+                data: vec![1.0, 2.0, 3.0, 4.0],
+            },
+            Dataset {
+                path: PathBuf::from_str("file3").unwrap(),
+                data: vec![1.0, 2.0, 3.0, 4.0],
+            },
+            Dataset {
+                path: PathBuf::from_str("file4").unwrap(),
+                data: vec![1.0, 2.0, 3.0, 4.0],
+            },
+            Dataset {
+                path: PathBuf::from_str("file5").unwrap(),
+                data: vec![1.0, 2.0, 3.0, 4.0],
+            },
+            Dataset {
+                path: PathBuf::from_str("file6").unwrap(),
+                data: vec![1.0, 2.0, 3.0, 4.0],
+            },
+            Dataset {
+                path: PathBuf::from_str("file7").unwrap(),
+                data: vec![1.0, 2.0, 3.0, 4.0],
+            },
+            Dataset {
+                path: PathBuf::from_str("file8").unwrap(),
+                data: vec![1.0, 2.0, 3.0, 4.0],
+            },
         ];
         print_heading(&mut buf, &datasets, &CLASSIC_SYMBOLS).unwrap();
-        assert_eq!("x file1\n+ file2\n* file3\n% file4\n# file5\n@ file6\nO file7\n", std::str::from_utf8(&buf).unwrap());
+        assert_eq!(
+            "x file1\n+ file2\n* file3\n% file4\n# file5\n@ file6\nO file7\n",
+            std::str::from_utf8(&buf).unwrap()
+        );
     }
 
- 
     #[test]
     fn test_plot() {
         let data = vec![
-            vec![1., 2., 4., 8., 16.,], // mean 6.2, median 4.0
-            vec![5., 6., 7., 8., 9.,], // mean and median: 7.0
+            vec![1., 2., 4., 8., 16.], // mean 6.2, median 4.0
+            vec![5., 6., 7., 8., 9.],  // mean and median: 7.0
         ];
         let stats: Vec<_> = data.iter().map(|d| Stats::from_dataset(&*d)).collect();
         let plot = Plot::new(30, &stats).unwrap();
@@ -272,21 +378,25 @@ mod test {
             stack: true,
             ..Opt::default()
         };
-        plot.draw(&mut buf, &data, &stats, &CLASSIC_SYMBOLS, &opt).unwrap();
-        assert_eq!("\
+        plot.draw(&mut buf, &data, &stats, &CLASSIC_SYMBOLS, &opt)
+            .unwrap();
+        assert_eq!(
+            "\
 +----------------------------+
 |             +              |
 |  xx   x+ + +x +           x|
 ||______M__A__________|      |
 |         |__M_|             |
 +----------------------------+
-", std::str::from_utf8(&buf).unwrap());
+",
+            std::str::from_utf8(&buf).unwrap()
+        );
     }
     #[test]
     fn test_plot_stacked() {
         let data = vec![
-            vec![1., 2., 4., 8., 16.,], // mean 6.2, median 4.0
-            vec![5., 6., 7., 8., 9.,], // mean and median: 7.0
+            vec![1., 2., 4., 8., 16.], // mean 6.2, median 4.0
+            vec![5., 6., 7., 8., 9.],  // mean and median: 7.0
         ];
         let stats: Vec<_> = data.iter().map(|d| Stats::from_dataset(&*d)).collect();
         let plot = Plot::new(30, &stats).unwrap();
@@ -296,20 +406,30 @@ mod test {
             stack: false,
             ..Opt::default()
         };
-        plot.draw(&mut buf, &data, &stats, &[' ', '1', '2', '3', '4', '5', '6'], &opt).unwrap();
-        assert_eq!("\
+        plot.draw(
+            &mut buf,
+            &data,
+            &stats,
+            &[' ', '1', '2', '3', '4', '5', '6'],
+            &opt,
+        )
+        .unwrap();
+        assert_eq!(
+            "\
 +----------------------------+
 |  11   12 2 23 2           1|
 ||______M_|A_M_|______|      |
 +----------------------------+
-", std::str::from_utf8(&buf).unwrap());
+",
+            std::str::from_utf8(&buf).unwrap()
+        );
     }
 
     #[test]
     fn test_plot_modern() {
         let data = vec![
-            vec![1., 2., 4., 8., 16.,], // mean 6.2, median 4.0
-            vec![5., 6., 7., 8., 9.,], // mean and median: 7.0
+            vec![1., 2., 4., 8., 16.], // mean 6.2, median 4.0
+            vec![5., 6., 7., 8., 9.],  // mean and median: 7.0
         ];
         let stats: Vec<_> = data.iter().map(|d| Stats::from_dataset(&*d)).collect();
         let plot = Plot::new(30, &stats).unwrap();
@@ -320,12 +440,16 @@ mod test {
             modern_chars: true,
             ..Opt::default()
         };
-        plot.draw(&mut buf, &data, &stats, &UNICODE_SYMBOLS, &opt).unwrap();
-        assert_eq!("\
+        plot.draw(&mut buf, &data, &stats, &UNICODE_SYMBOLS, &opt)
+            .unwrap();
+        assert_eq!(
+            "\
 ┌────────────────────────────┐
 │  ●●   ●○ ○ ○◾ ○           ●│
 │├──────M─├A─M─┤──────┤      │
 └────────────────────────────┘
-", std::str::from_utf8(&buf).unwrap());
+",
+            std::str::from_utf8(&buf).unwrap()
+        );
     }
 }

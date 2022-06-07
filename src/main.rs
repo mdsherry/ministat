@@ -8,7 +8,7 @@ mod t_table;
 use args::Opt;
 use data::{load_data, Dataset};
 use err::*;
-use plot::{plot_graph, print_heading, UNICODE_SYMBOLS, CLASSIC_SYMBOLS};
+use plot::{plot_graph, print_heading, CLASSIC_SYMBOLS, UNICODE_SYMBOLS};
 use stats::*;
 
 use clap::Parser;
@@ -31,13 +31,23 @@ fn validate_datasets(datasets: &[Dataset]) -> Result<(), Error> {
     }
     Ok(())
 }
+
+fn get_symbols(opt: &Opt) -> Vec<char> {
+    opt.symbols
+        .as_deref()
+        .map(|custom_symbols| [' '].into_iter().chain(custom_symbols.chars()).collect())
+        .unwrap_or_else(|| {
+            if opt.modern_chars {
+                UNICODE_SYMBOLS.to_vec()
+            } else {
+                CLASSIC_SYMBOLS.to_vec()
+            }
+        })
+}
+
 fn run(opt: &Opt) -> Result<(), Error> {
     let mut stdout = std::io::stdout().lock();
-    let symbols = if opt.modern_chars {
-        &UNICODE_SYMBOLS
-    } else {
-        &CLASSIC_SYMBOLS
-    };
+    let symbols = get_symbols(opt);
     if opt.files.len() > symbols.len() - 1 {
         return Err(MinistatFailure::TooManyDatasets {
             dataset_count: opt.files.len(),
@@ -46,8 +56,8 @@ fn run(opt: &Opt) -> Result<(), Error> {
     }
     let datasets = load_data(opt)?;
     validate_datasets(&datasets)?;
-    
-    print_heading(&mut stdout, &datasets, symbols)?;
+
+    print_heading(&mut stdout, &datasets, &symbols)?;
     let stats: Vec<_> = datasets
         .iter()
         .map(|dataset| Stats::from_dataset(&dataset.data))
@@ -60,7 +70,7 @@ fn run(opt: &Opt) -> Result<(), Error> {
             opt,
             &stats,
             &datasets.into_iter().map(|x| x.data).collect::<Vec<_>>(),
-            symbols
+            &symbols,
         )?;
     }
     print_stats(
@@ -68,7 +78,7 @@ fn run(opt: &Opt) -> Result<(), Error> {
         &stats,
         opt.confidence_level.0,
         opt.raw_stats,
-        symbols
+        &symbols,
     )?;
 
     Ok(())
@@ -79,4 +89,37 @@ fn main() -> Result<(), Error> {
 
     run(&opt)?;
     Ok(())
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{args::Opt, get_symbols};
+
+    #[test]
+    fn test_custom_symbols() {
+        let opt_classic = Opt {
+            modern_chars: false,
+            ..Opt::default()
+        };
+        let opt_modern = Opt {
+            modern_chars: true,
+            ..Opt::default()
+        };
+        let opt_custom = Opt {
+            symbols: Some("a2³$e6".into()),
+            ..Opt::default()
+        };
+        assert_eq!(
+            vec![' ', 'x', '+', '*', '%', '#', '@', 'O'],
+            get_symbols(&opt_classic)
+        );
+        assert_eq!(
+            vec![' ', '●', '○', '◾', '◽', '◆', '◇', '▲'],
+            get_symbols(&opt_modern)
+        );
+        assert_eq!(
+            vec![' ', 'a', '2', '³', '$', 'e', '6'],
+            get_symbols(&opt_custom)
+        );
+    }
 }

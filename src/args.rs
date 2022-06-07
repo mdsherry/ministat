@@ -51,6 +51,9 @@ pub struct Opt {
     #[clap(parse(from_os_str))]
     /// Files containing datapoints to compute statistics for
     pub files: Vec<PathBuf>,
+
+    #[clap(long = "symbols")]
+    pub symbols: Option<String>,
 }
 
 impl Default for Opt {
@@ -65,7 +68,8 @@ impl Default for Opt {
             confidence_level: Confidence(95),
             delimiter: " \t".into(),
             width: None,
-            files: vec![]
+            files: vec![],
+            symbols: None,
         }
     }
 }
