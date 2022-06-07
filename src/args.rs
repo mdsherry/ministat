@@ -53,6 +53,23 @@ pub struct Opt {
     pub files: Vec<PathBuf>,
 }
 
+impl Default for Opt {
+    fn default() -> Self {
+        Self {
+            raw_stats: false,
+            separate_lines: false,
+            stats_only: false,
+            modern_chars: false,
+            stack: false,
+            column: Column(1),
+            confidence_level: Confidence(95),
+            delimiter: " \t".into(),
+            width: None,
+            files: vec![]
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct Column(pub u8);
 impl FromStr for Column {
